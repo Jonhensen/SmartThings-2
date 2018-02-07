@@ -504,6 +504,33 @@ def sendWhites() {  // Need to maintain this, so that whites can be changed whil
     
 }
 
+def sendStatus() {  // To request Status of current Bulb
+    def hosthex = convertIPtoHex(ip);
+    def porthex = convertPortToHex(port);
+    def target = "$hosthex:$porthex";
+    device.deviceNetworkId = target;
+    
+    byte[] byteHeader = [0x81, 0x8A, 0x8B]
+    
+    String bodyHeader = byteHeader.encodeHex()
+    String bodyMain = bodyHeader
+    
+    def byteMain = bodyMain.decodeHex()
+    def checksum = 0
+    
+    byteMain.each {
+    	checksum += it;
+    }
+    checksum = checksum & 0xFF
+    String checksumHex = Integer.toHexString(checksum)
+    log.debug "Sending Status Request"
+    
+    String body = bodyMain + checksumHex
+    
+    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac")));
+    
+}
+
 def setLevel(level) {
 	log.trace "setLevel($level)"
     
@@ -1069,15 +1096,24 @@ def animationSwitch(val) {
         [name:"FadeRed",	command: '26'],
         [name:"FadeGreen",	command: '27'],
         [name:"FadeBlue",	command: '28'],
+        [name:"FadeYellow",	command: '29'],
+        [name:"FadeCyan",	command: '2a'],
+        [name:"FadePurple",	command: '2b'],
         [name:"FadeWhite",	command: '2c'],
+        [name:"FadeRedGreen",	command: '2d'],
+        [name:"FadeRedBlue",	command: '2e'],
+        [name:"FadeGreenBlue",	command: '2f'],
         [name:"Strobe7",	command: '30'],
         [name:"StrobeRed",	command: '31'],
-        [name:"StrobeGreen",command: '32'],
+        [name:"StrobeGreen",	command: '32'],
         [name:"StrobeBlue",	command: '33'],
-        [name:"StrobeWhite",command: '37'],
+        [name:"StrobeYellow",	command: '34'],
+        [name:"StrobeCyan",	command: '35'],
+        [name:"StrobePurple",	command: '36'],
+        [name:"StrobeWhite",	command: '37'],
         [name:"Jump7",		command: '38'],
 	]
-    
+	
     def animationData = [:]    
     animationData = animations.find { it.name == val }
     
