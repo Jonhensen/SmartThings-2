@@ -46,6 +46,7 @@ metadata {
         command "user1"
         command "user2"
         command "user3"
+        command "refresh"
      }
     
      tiles(scale: 2)  {
@@ -504,6 +505,30 @@ def sendWhites() {  // Need to maintain this, so that whites can be changed whil
     
 }
 
+def refresh() {
+	sendStatus()
+}
+
+def parseStatus(physicalgraph.device.HubResponse hubResponse) {
+	log.debug "Entered parseStatus()..."
+    def body = hubResponse.body
+    def desc = hubResponse.description
+    def xml = hubResponse.xml
+    def json = hubResponse.json
+    def data = hubResponse?.data
+    def headers  = hubResponse.headers 
+    def error = hubResponse.error
+    log.debug "hubResponse:${hubResponse}"
+    log.debug "body:${body}"
+    log.debug "desc:${desc}"
+    log.debug "xml:${xml}"
+    log.debug "json:${json}"
+    log.debug "data:${data}"
+    log.debug "headers:${headers}"
+    log.debug "error:${error}"
+    // No entries actually contain the payload that is returned
+}
+
 def sendStatus() {  // To request Status of current Bulb
     def hosthex = convertIPtoHex(ip);
     def porthex = convertPortToHex(port);
@@ -527,7 +552,7 @@ def sendStatus() {  // To request Status of current Bulb
     
     String body = bodyMain + checksumHex
     
-    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac")));
+    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"), [callback: parseStatus]));
     
 }
 
@@ -1154,6 +1179,6 @@ def StrobeBlue() 	{ doColorButton("aStrobeBlue") }
 def FadeWhite() 	{ doColorButton("aFadeWhite") }
 def StrobeWhite() 	{ doColorButton("aStrobeWhite") }
 
-def user1()		{ doUserButton("White") }
+def user1()		{ refresh() }
 def user2()		{ doUserButton("White") }
 def user3()		{ doUserButton("White") }
