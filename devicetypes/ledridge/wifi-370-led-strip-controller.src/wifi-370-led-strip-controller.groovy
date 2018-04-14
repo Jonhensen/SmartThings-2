@@ -241,11 +241,11 @@ metadata {
     }
     
     preferences {
-        input("ip", "string", title:"Controller IP Address", description: "Controller IP Address", defaultValue: "192.168.1.69", required: true, displayDuringSetup: true)
-        input("port", "string", title:"Controller Port", description: "Controller Port", defaultValue: 5577 , required: true, displayDuringSetup: true)
-        //input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: true, displayDuringSetup: true)
-        //input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: true, displayDuringSetup: true)
-        input(name:"CStyle", type:"enum", title: "Controller Style", options: ["RGBWW", "RGBW", "RGB+WW", "RGB"], description: "Enter Controller Style", defaultValue: "RGBWW" , required: true, displayDuringSetup: true)
+        input("ip", "string", title:"Controller IP Address", description: "Controller IP Address", defaultValue: "192.168.1.69", required: false, displayDuringSetup: true)
+        input("port", "string", title:"Controller Port", description: "Controller Port", defaultValue: 5577 , required: false, displayDuringSetup: true)
+        //input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: false, displayDuringSetup: true)
+        //input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: false, displayDuringSetup: true)
+        input(name:"CStyle", type:"enum", title: "Controller Style", options: ["RGBWW", "RGBW", "RGB+WW", "RGB"], description: "Enter Controller Style", defaultValue: "RGBWW" , required: false, displayDuringSetup: true)
         //input("userPref1", "string", title:"User Button 1 Name", description: "User Button 1 Name" , required: false, displayDuringSetup: false)
         //input("userPref1C", "string", title:"User Button 1 Color", description: "User Button 1 Color" , required: false, displayDuringSetup: false)
         //input("userPref2", "string", title:"User Button 2 Name", description: "User Button 2 Name" , required: false, displayDuringSetup: false)
