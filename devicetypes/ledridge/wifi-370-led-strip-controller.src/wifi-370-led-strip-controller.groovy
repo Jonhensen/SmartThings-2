@@ -245,7 +245,7 @@ metadata {
         input("port", "string", title:"Controller Port", description: "Controller Port", defaultValue: 5577 , required: false, displayDuringSetup: true)
         //input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: false, displayDuringSetup: true)
         //input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: false, displayDuringSetup: true)
-        input(name:"CStyle", type:"enum", title: "Controller Style", options: ["RGBWW", "RGBW", "RGB+WW", "RGB"], description: "Enter Controller Style", defaultValue: "RGBWW" , required: false, displayDuringSetup: true)
+        input(name:"CStyle", type:"enum", title: "Controller Style", options: ["RGBWW", "RGBW", "RGB+WW", "RGB", "RGB-LW12"], description: "Enter Controller Style", defaultValue: "RGBWW" , required: false, displayDuringSetup: true)
         //input("userPref1", "string", title:"User Button 1 Name", description: "User Button 1 Name" , required: false, displayDuringSetup: false)
         //input("userPref1C", "string", title:"User Button 1 Color", description: "User Button 1 Color" , required: false, displayDuringSetup: false)
         //input("userPref2", "string", title:"User Button 2 Name", description: "User Button 2 Name" , required: false, displayDuringSetup: false)
@@ -387,8 +387,12 @@ def sendPower2(state) {
     device.deviceNetworkId = target;
     
     //byte[] body = buildTLSClientHello();
-    byte[] body = [0x71, 0x24, 0x0F, 0xA4]
-
+	byte[] body = [0x71, 0x24, 0x0F, 0xA4]
+	if (CStyle == "RGB-LW12")
+    {
+		body = [0xCC, 0x23, 0x33]
+	}
+	
     log.debug "${body.length} ${bytesToHex(body)}";
     String strBody = new String(body, "ISO-8859-1");
 
@@ -408,8 +412,22 @@ def sendPower(state) {
     } else {	 //71 24 0f a4 off
     	bytes = [0x71, 0x24, 0x0F, 0xA4]
 	}
-    String body = bytes.encodeHex()
-    String sData = new String(bytes, "ISO-8859-1");
+	
+	String body = bytes.encodeHex()
+	
+	byte[] bytesLW12 = [0xCC, 0x24, 0x33]
+    if (state) { // 71 23 0f a3 on
+    	bytesLW12 = [0xCC, 0x23, 0x33]
+    } else {	 //71 24 0f a4 off
+    	bytesLW12 = [0xCC, 0x24, 0x33]
+	}
+	
+	if (CStyle == "RGB-LW12")
+    {
+		body = bytesLW12.encodeHex()
+	}
+    
+	String sData = new String(bytes, "ISO-8859-1");
     byte[] bytes2 = [0xA4]
     String sData2 = new String(bytes2, "ISO-8859-1");
     String pure = "\u7123\u0FA4"
@@ -422,6 +440,11 @@ def sendPower(state) {
 }
 
 def sendRGB() {
+	if (CStyle == "RGB-LW12")
+	{
+		sendRGBLW12()
+		return
+	}
 	def hosthex = convertIPtoHex(ip);
     def porthex = convertPortToHex(port);
     def target = "$hosthex:$porthex";
@@ -469,6 +492,28 @@ def sendRGB() {
     String body = bodyMain + checksumHex
     
     sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"    
+}
+
+def sendRGBLW12() {
+	def hosthex = convertIPtoHex(ip);
+    def porthex = convertPortToHex(port);
+    def target = "$hosthex:$porthex";
+    device.deviceNetworkId = target;
+    
+	byte[] byteHeader = [0x56]
+    byte[] byteFooter = [0xAA]
+    
+    int RL = getRL().toInteger()
+    int GL = getGL().toInteger()
+    int BL = getBL().toInteger()
+    def level = getLevel()
+    log.debug "${RL}:${GL}:${BL}@${level}+${CStyle}"
+    
+    String bodyHeader = byteHeader.encodeHex()
+    String bodyFooter = byteFooter.encodeHex()
+    String bodyMain = bodyHeader + hex(RL) + hex(GL) + hex(BL) + bodyFooter
+    
+    sendHubCommand(new physicalgraph.device.HubAction(bodyMain.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"    
 }
 
 def sendWhites() {  // Need to maintain this, so that whites can be changed while an animation is running
@@ -552,7 +597,13 @@ def sendStatus() {  // To request Status of current Bulb
     
     String body = bodyMain + checksumHex
     
-    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"), [callback: parseStatus]));
+    byte[] bytesLW12 = [0xEF, 0x01, 0x77]
+    if (CStyle == "RGB-LW12")
+    {
+		body = bytesLW12.encodeHex()
+	}
+    
+	sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"), [callback: parseStatus]));
     
 }
 
